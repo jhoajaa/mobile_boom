@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "556615603228",
+    "project_id": "boom-d7450",
+    "storage_bucket": "boom-d7450.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556615603228:android:8aa8ab6a3fd8ccb3f3bbd9",
+        "android_client_info": {
+          "package_name": "com.example.boom_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "556615603228-fq4apcg8pdtpdg4ka3dpkqofg78s6qte.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqcSwPYAPWkcBFW0QiV0lwP5XfdddA4ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "556615603228-fq4apcg8pdtpdg4ka3dpkqofg78s6qte.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556615603228:android:e620700c0459f4c9f3bbd9",
+        "android_client_info": {
+          "package_name": "com.tajo.boom"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "556615603228-fq4apcg8pdtpdg4ka3dpkqofg78s6qte.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqcSwPYAPWkcBFW0QiV0lwP5XfdddA4ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "556615603228-fq4apcg8pdtpdg4ka3dpkqofg78s6qte.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
