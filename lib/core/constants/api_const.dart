@@ -4,4 +4,6 @@ class ApiConstants {
   static const String books = '$baseUrl/books';
   static const String categories = '$baseUrl/categories';
   static const String updateReadingProgress = '$baseUrl/reading-progress/update';
+
+  static get loans => null;
 } 
