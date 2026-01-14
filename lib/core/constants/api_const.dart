@@ -5,5 +5,5 @@ class ApiConstants {
   static const String categories = '$baseUrl/categories';
   static const String updateReadingProgress = '$baseUrl/reading-progress/update';
 
-  static get loans => null;
+  static const String loans = '$baseUrl/loans';
 } 
