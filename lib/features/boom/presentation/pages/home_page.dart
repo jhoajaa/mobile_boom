@@ -1,6 +1,8 @@
 // ignore_for_file: use_build_context_synchronously, unnecessary_underscores, avoid_print
 import 'package:boom_mobile/features/boom/presentation/pages/add_book_page.dart';
 import 'package:boom_mobile/features/boom/presentation/pages/book_detail_page.dart';
+import 'package:boom_mobile/features/boom/presentation/pages/loan_page.dart';
+import 'package:boom_mobile/features/boom/presentation/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -58,8 +60,8 @@ class _MobileHomeViewState extends State<_MobileHomeView> {
 
   List<Widget> get _pages => [
     _buildHomeBody(),
-    const Center(child: Text("Halaman Peminjaman")),
-    const Center(child: Text("Halaman Profil")),
+    const LoanPage(),
+    const ProfilePage(),
   ];
 
   @override
