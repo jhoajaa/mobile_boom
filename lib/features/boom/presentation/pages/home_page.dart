@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, unnecessary_underscores, avoid_print
 import 'package:boom_mobile/features/boom/presentation/pages/add_book_page.dart';
+import 'package:boom_mobile/features/boom/presentation/pages/book_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -197,7 +198,20 @@ class _MobileHomeViewState extends State<_MobileHomeView> {
                         return BookListTile(
                           book: filteredBooks[index],
                           onTap: () async {
-                            // TODO: Navigasi ke halaman detail buku
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    BookDetailPage(book: filteredBooks[index]),
+                              ),
+                            );
+                            if (result == true) {
+                              if (!mounted) return;
+                              await Future.delayed(
+                                const Duration(milliseconds: 500),
+                              );
+                              context.read<BookBloc>().add(GetBooksEvent());
+                            }
                           },
                         );
                       },
@@ -352,7 +366,32 @@ class _TabletHomeViewState extends State<_TabletHomeView> {
                                       "Masuk ke Detail Buku: ${book.title}",
                                     );
 
-                                    // Navigasi ke halaman detail buku
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => BookDetailPage(
+                                          book: filteredBooks[index],
+                                        ),
+                                      ),
+                                    );
+
+                                    print(
+                                      "Kembali dari detail. Result: $result",
+                                    );
+
+                                    if (result == true) {
+                                      print("Melakukan Refresh Otomatis...");
+
+                                      if (!context.mounted) return;
+
+                                      await Future.delayed(
+                                        const Duration(milliseconds: 500),
+                                      );
+
+                                      context.read<BookBloc>().add(
+                                        GetBooksEvent(),
+                                      );
+                                    }
                                   },
                                 );
                               },
