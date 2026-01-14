@@ -1,3 +1,4 @@
+import 'package:boom_mobile/features/boom/presentation/pages/add_loan_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -46,7 +47,12 @@ class _BookDetailPageState extends State<BookDetailPage> {
 
   void _updateLocalState(String status, int page) {
     if (status == 'dipinjam') {
-      // ToDo: navigasi ke halaman peminjaman
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AddLoanPage(preSelectedBookId: widget.book.bookId),
+        ),
+      );
 
       return;
     }
