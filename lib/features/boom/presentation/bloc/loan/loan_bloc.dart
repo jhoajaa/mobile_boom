@@ -115,7 +115,7 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
 
       if (response.statusCode == 200) {
         emit(LoanSuccess("Data berhasil diperbarui!"));
-        add(GetLoansEvent()); // Refresh list
+        add(GetLoansEvent());
       } else {
         emit(
           LoanError("Gagal update: ${response.data['messages'] ?? 'Unknown'}"),
@@ -132,19 +132,26 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
     required String date,
   }) async {
     try {
-      DateTime startDate = DateTime.parse(date);
+      DateTime parsedDate = DateTime.parse(date);
 
-      DateTime endDate = startDate;
+      DateTime startDate = DateTime(
+        parsedDate.year, 
+        parsedDate.month, 
+        parsedDate.day, 
+        9, 0, 0
+      );
+
+      DateTime endDate = startDate.add(const Duration(hours: 1));
 
       final Event event = Event(
         title: title,
         description: description,
         startDate: startDate,
         endDate: endDate,
-        allDay: true,
+        allDay: false, 
       );
 
-      print("Membuka Native Calendar App...");
+      print("Membuka Native Calendar App: $startDate s/d $endDate");
       await Add2Calendar.addEvent2Cal(event);
     } catch (e) {
       print("Error Add Calendar: $e");

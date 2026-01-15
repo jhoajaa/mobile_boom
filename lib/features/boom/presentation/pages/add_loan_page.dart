@@ -1,4 +1,3 @@
-import 'package:boom_mobile/core/constants/api_const.dart';
 import 'package:boom_mobile/core/utils/central_notification.dart';
 import 'package:boom_mobile/features/boom/data/models/loan_model.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/book/book_bloc.dart';
@@ -7,9 +6,8 @@ import 'package:boom_mobile/features/boom/presentation/bloc/book/book_state.dart
 import 'package:boom_mobile/features/boom/presentation/bloc/loan/loan_bloc.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/loan/loan_event.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/loan/loan_state.dart';
-import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart' as di;
@@ -35,10 +33,32 @@ class AddLoanPage extends StatelessWidget {
   }
 }
 
-class BorrowerSuggestion {
-  final String name;
-  final String phone;
-  const BorrowerSuggestion(this.name, this.phone);
+class PhoneNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    if (text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      if (i > 0 && i % 4 == 0) {
+        buffer.write(' ');
+      }
+      buffer.write(text[i]);
+    }
+
+    final formattedText = buffer.toString();
+    return newValue.copyWith(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
 }
 
 class _AddLoanView extends StatefulWidget {
@@ -52,13 +72,13 @@ class _AddLoanView extends StatefulWidget {
 }
 
 class _AddLoanViewState extends State<_AddLoanView> {
+  late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _notesController;
   late TextEditingController _dateController;
 
   String? _selectedBookId;
   DateTime? _selectedDate;
-  String _inputName = "";
   String _tempBookTitle = "";
 
   bool get _isEditMode => widget.existingLoan != null;
@@ -67,7 +87,9 @@ class _AddLoanViewState extends State<_AddLoanView> {
   void initState() {
     super.initState();
 
-    _inputName = widget.existingLoan?.borrowerName ?? '';
+    _nameController = TextEditingController(
+      text: widget.existingLoan?.borrowerName ?? '',
+    );
 
     _phoneController = TextEditingController(
       text: widget.existingLoan?.phoneNumber ?? '',
@@ -91,32 +113,13 @@ class _AddLoanViewState extends State<_AddLoanView> {
     }
   }
 
-  Future<List<BorrowerSuggestion>> _searchBorrower(String query) async {
-    if (query.length < 2) return [];
-
-    final user = FirebaseAuth.instance.currentUser;
-    try {
-      final dio = di.sl<Dio>();
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/api/borrowers/search',
-        queryParameters: {'q': query, 'uid': user?.uid},
-      );
-
-      if (response.statusCode == 200) {
-        final List data = response.data;
-        return data
-            .map(
-              (json) => BorrowerSuggestion(
-                json['name'] ?? '',
-                json['phone_number'] ?? '',
-              ),
-            )
-            .toList();
-      }
-    } catch (e) {
-      print("Search Error: $e");
-    }
-    return [];
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _notesController.dispose();
+    _dateController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickDate() async {
@@ -138,7 +141,7 @@ class _AddLoanViewState extends State<_AddLoanView> {
   }
 
   void _submit(BuildContext context) {
-    if (_selectedBookId == null || _inputName.isEmpty) {
+    if (_selectedBookId == null || _nameController.text.trim().isEmpty) {
       showCentralNotification(
         context,
         "Buku dan Nama wajib diisi!",
@@ -149,8 +152,9 @@ class _AddLoanViewState extends State<_AddLoanView> {
 
     final data = {
       'book_id': _selectedBookId,
-      'name': _inputName,
-      'phone': _phoneController.text,
+      'name': _nameController.text.trim(),
+
+      'phone': _phoneController.text.replaceAll(' ', ''),
       'notes': _notesController.text,
       'return_date': _dateController.text,
     };
@@ -180,12 +184,14 @@ class _AddLoanViewState extends State<_AddLoanView> {
         ),
       ),
       backgroundColor: Colors.white,
-
       body: BlocListener<LoanBloc, LoanState>(
         listener: (context, state) {
           if (state is LoanSuccess) {
             showCentralNotification(context, state.message, isError: false);
-            Navigator.pop(context, true);
+
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) Navigator.pop(context, true);
+            });
           } else if (state is LoanError) {
             showCentralNotification(context, state.message, isError: true);
           }
@@ -200,7 +206,6 @@ class _AddLoanViewState extends State<_AddLoanView> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-
               AbsorbPointer(
                 absorbing: _isEditMode,
                 child: BlocBuilder<BookBloc, BookState>(
@@ -224,7 +229,6 @@ class _AddLoanViewState extends State<_AddLoanView> {
                             value: _selectedBookId,
                             hint: const Text("Pilih buku"),
                             isExpanded: true,
-
                             items: state.books
                                 .where((b) {
                                   return b.status != 'dipinjam' ||
@@ -254,103 +258,40 @@ class _AddLoanViewState extends State<_AddLoanView> {
 
               const SizedBox(height: 20),
 
-              const Text(
+              _buildInput(
                 "Nama Peminjam",
+                _nameController,
+                "Masukkan nama peminjam",
+              ),
+
+              const SizedBox(height: 4),
+
+              const Text(
+                "Nomor HP (Opsional)",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.number,
 
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Autocomplete<BorrowerSuggestion>(
-                    initialValue: TextEditingValue(text: _inputName),
-
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      setState(() {
-                        _inputName = textEditingValue.text;
-                      });
-                      return _searchBorrower(textEditingValue.text);
-                    },
-
-                    displayStringForOption: (BorrowerSuggestion option) =>
-                        option.name,
-
-                    onSelected: (BorrowerSuggestion selection) {
-                      setState(() {
-                        _inputName = selection.name;
-                        _phoneController.text = selection.phone;
-                      });
-                    },
-
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
-                        child: Material(
-                          elevation: 4.0,
-                          child: SizedBox(
-                            width: constraints.maxWidth,
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final option = options.elementAt(index);
-                                return ListTile(
-                                  title: Text(option.name),
-                                  subtitle: Text(option.phone),
-                                  onTap: () => onSelected(option),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-
-                    fieldViewBuilder:
-                        (
-                          context,
-                          textEditingController,
-                          focusNode,
-                          onFieldSubmitted,
-                        ) {
-                          if (_isEditMode &&
-                              textEditingController.text.isEmpty &&
-                              _inputName.isNotEmpty) {
-                            textEditingController.text = _inputName;
-                          }
-
-                          return TextField(
-                            controller: textEditingController,
-                            focusNode: focusNode,
-                            onChanged: (val) => _inputName = val,
-                            decoration: const InputDecoration(
-                              hintText: "Cari atau ketik nama baru...",
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              suffixIcon: Icon(
-                                Icons.search,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        },
-                  );
-                },
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  PhoneNumberFormatter(),
+                  LengthLimitingTextInputFormatter(16),
+                ],
+                decoration: const InputDecoration(
+                  hintText: "08xx xxxx xxxx",
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),
 
-              _buildInput(
-                "Nomor HP (Opsional)",
-                _phoneController,
-                "0800-0000-0000",
-                isNumber: true,
-              ),
-              const SizedBox(height: 20),
               const Text(
                 "Tanggal Pengembalian",
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -366,8 +307,11 @@ class _AddLoanViewState extends State<_AddLoanView> {
                   suffixIcon: Icon(Icons.calendar_today),
                 ),
               ),
+
               const SizedBox(height: 20),
+
               _buildInput("Catatan", _notesController, "...", maxLines: 3),
+
               const SizedBox(height: 40),
 
               BlocBuilder<LoanBloc, LoanState>(
@@ -416,7 +360,6 @@ class _AddLoanViewState extends State<_AddLoanView> {
     String label,
     TextEditingController ctrl,
     String hint, {
-    bool isNumber = false,
     int maxLines = 1,
   }) {
     return Padding(
@@ -428,7 +371,6 @@ class _AddLoanViewState extends State<_AddLoanView> {
           const SizedBox(height: 8),
           TextField(
             controller: ctrl,
-            keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
             maxLines: maxLines,
             decoration: InputDecoration(
               hintText: hint,
