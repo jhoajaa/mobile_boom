@@ -1,4 +1,5 @@
 import 'package:boom_mobile/core/constants/api_const.dart';
+import 'package:boom_mobile/core/utils/central_notification.dart';
 import 'package:boom_mobile/features/boom/data/models/loan_model.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/book/book_bloc.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/book/book_event.dart';
@@ -138,8 +139,10 @@ class _AddLoanViewState extends State<_AddLoanView> {
 
   void _submit(BuildContext context) {
     if (_selectedBookId == null || _inputName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Buku dan Nama wajib diisi!")),
+      showCentralNotification(
+        context,
+        "Buku dan Nama wajib diisi!",
+        isError: true,
       );
       return;
     }
@@ -181,20 +184,10 @@ class _AddLoanViewState extends State<_AddLoanView> {
       body: BlocListener<LoanBloc, LoanState>(
         listener: (context, state) {
           if (state is LoanSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
+            showCentralNotification(context, state.message, isError: false);
             Navigator.pop(context, true);
           } else if (state is LoanError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            showCentralNotification(context, state.message, isError: true);
           }
         },
         child: SingleChildScrollView(

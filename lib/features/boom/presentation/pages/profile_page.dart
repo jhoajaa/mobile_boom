@@ -1,3 +1,4 @@
+import 'package:boom_mobile/core/utils/central_notification.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/profile/profile_bloc.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/profile/profile_event.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/profile/profile_state.dart';
@@ -103,12 +104,7 @@ class _ProfileView extends StatelessWidget {
               (route) => false,
             );
           } else if (state is ProfileError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            showCentralNotification(context, state.message, isError: true);
           }
         },
         builder: (context, state) {

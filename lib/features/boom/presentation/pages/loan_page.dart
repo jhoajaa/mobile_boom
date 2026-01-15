@@ -1,4 +1,6 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously
+import 'package:boom_mobile/core/utils/central_notification.dart';
+
 import '../../../../injection_container.dart' as di;
 import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,21 +65,11 @@ class _LoanView extends StatelessWidget {
         body: BlocConsumer<LoanBloc, LoanState>(
           listener: (context, state) {
             if (state is LoanSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              showCentralNotification(context, state.message, isError: false);
 
               context.read<LoanBloc>().add(GetLoansEvent(isHistory: false));
             } else if (state is LoanError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              showCentralNotification(context, state.message, isError: true);
             }
           },
           builder: (context, state) {
@@ -255,7 +247,9 @@ class _LoanView extends StatelessWidget {
                                     ),
                                     child: const Text(
                                       "Dikembalikan",
-                                      style: TextStyle(color: AppColors.mainBlack),
+                                      style: TextStyle(
+                                        color: AppColors.mainBlack,
+                                      ),
                                     ),
                                   )
                                 else

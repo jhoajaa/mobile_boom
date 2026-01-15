@@ -1,3 +1,4 @@
+import 'package:boom_mobile/core/utils/central_notification.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/auth/auth_bloc.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/auth/auth_event.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/auth/auth_state.dart';
@@ -45,8 +46,10 @@ class _MobileLoginViewState extends State<_MobileLoginView> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email dan Kata sandi harus diisi!")),
+      showCentralNotification(
+        context,
+        "Email dan Kata sandi harus diisi!",
+        isError: true,
       );
       return;
     }
@@ -59,16 +62,9 @@ class _MobileLoginViewState extends State<_MobileLoginView> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(backgroundColor: Colors.red, content: Text(state.message)),
-          );
+          showCentralNotification(context, state.message, isError: true);
         } else if (state is AuthSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.green,
-              content: Text("Login Berhasil!"),
-            ),
-          );
+          showCentralNotification(context, "Login Berhasil!", isError: false);
 
           Navigator.pushReplacement(
             context,
@@ -176,8 +172,10 @@ class _TabletLoginViewState extends State<_TabletLoginView> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email dan Kata sandi harus diisi!")),
+      showCentralNotification(
+        context,
+        "Email dan Kata sandi harus diisi!",
+        isError: true,
       );
       return;
     }
@@ -190,16 +188,9 @@ class _TabletLoginViewState extends State<_TabletLoginView> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(backgroundColor: Colors.red, content: Text(state.message)),
-          );
+          showCentralNotification(context, state.message, isError: true);
         } else if (state is AuthSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.green,
-              content: Text("Login Berhasil!"),
-            ),
-          );
+          showCentralNotification(context, "Login Berhasil!", isError: false);
 
           Navigator.pushReplacement(
             context,
