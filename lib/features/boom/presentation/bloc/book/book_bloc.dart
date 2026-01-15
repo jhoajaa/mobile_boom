@@ -16,7 +16,6 @@ class BookBloc extends Bloc<BookEvent, BookState> {
   BookBloc({required this.dio}) : super(BookInitial()) {
     on<GetBooksEvent>(_onGetBooks);
     on<UpdateBookProgressEvent>(_onUpdateProgress);
-    on<DeleteBookEvent>(_onDeleteBook);
   }
 
   Future<void> _onGetBooks(GetBooksEvent event, Emitter<BookState> emit) async {
@@ -119,26 +118,6 @@ class BookBloc extends Bloc<BookEvent, BookState> {
       }
     } catch (e) {
       print("Gagal update progress ke server: $e");
-    }
-  }
-
-  Future<void> _onDeleteBook(
-    DeleteBookEvent event,
-    Emitter<BookState> emit,
-  ) async {
-    _localBooksCache.removeWhere((b) => b.bookId == event.bookId);
-    emit(BookLoaded(List.from(_localBooksCache)));
-    await dbHelper.cacheBooks(_localBooksCache);
-
-    try {
-      final response = await dio.delete(
-        '${ApiConstants.books}/${event.bookId}',
-      );
-      if (response.statusCode != 200) {
-        print("Gagal hapus di server: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error delete: $e");
     }
   }
 }

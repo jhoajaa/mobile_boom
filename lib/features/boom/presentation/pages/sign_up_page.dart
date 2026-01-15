@@ -1,3 +1,4 @@
+import 'package:boom_mobile/core/utils/central_notification.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/auth/auth_bloc.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/auth/auth_event.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/auth/auth_state.dart';
@@ -13,7 +14,6 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Pastikan AuthBloc sudah diprovide di main.dart / parent widget
       body: ResponsiveLayout(
         mobile: const _MobileSignUpView(),
         tablet: const _TabletSignUpView(),
@@ -48,22 +48,20 @@ class _MobileSignUpViewState extends State<_MobileSignUpView> {
     final confirm = _confirmPassController.text.trim();
 
     if (email.isEmpty || password.isEmpty || confirm.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Harap isi semua kolom!")));
+      showCentralNotification(context, "Harap isi semua kolom!", isError: true);
       return;
     }
 
     if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Konfirmasi password tidak cocok!")),
+      showCentralNotification(
+        context,
+        "Konfirmasi password tidak cocok!",
+        isError: true,
       );
       return;
     }
 
-    context.read<AuthBloc>().add(
-      RegisterRequested(email, password),
-    );
+    context.read<AuthBloc>().add(RegisterRequested(email, password));
   }
 
   @override
@@ -71,16 +69,12 @@ class _MobileSignUpViewState extends State<_MobileSignUpView> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthFailure) {
-          // Gagal (Firebase Error / API Error)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(backgroundColor: Colors.red, content: Text(state.message)),
-          );
+          showCentralNotification(context, state.message, isError: true);
         } else if (state is AuthSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.green,
-              content: Text("Registrasi Berhasil! Silakan Masuk."),
-            ),
+          showCentralNotification(
+            context,
+            "Registrasi Berhasil! Silakan Masuk.",
+            isError: false,
           );
           Navigator.pushReplacement(
             context,
@@ -212,9 +206,7 @@ class _TabletSignUpViewState extends State<_TabletSignUpView> {
       return;
     }
 
-    context.read<AuthBloc>().add(
-      RegisterRequested(email, password),
-    );
+    context.read<AuthBloc>().add(RegisterRequested(email, password));
   }
 
   @override
