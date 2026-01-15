@@ -23,3 +23,10 @@ class UpdateBookProgressEvent extends BookEvent {
   @override
   List<Object> get props => [bookId, statusBaca, currentPage];
 }
+
+class DeleteBookEvent extends BookEvent {
+  final String bookId;
+  const DeleteBookEvent(this.bookId);
+  @override
+  List<Object> get props => [bookId];
+}
