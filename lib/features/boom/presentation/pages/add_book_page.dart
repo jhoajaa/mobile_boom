@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:boom_mobile/core/utils/central_notification.dart';
 import 'package:boom_mobile/features/boom/data/models/book_model.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/add_book/add_book_event.dart';
 import 'package:boom_mobile/features/boom/presentation/bloc/add_book/add_book_state.dart';
@@ -77,11 +78,10 @@ class _AddBookViewState extends State<_AddBookView> {
 
   void _submitForm(BuildContext context) {
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Harap pilih kategori buku!"),
-          backgroundColor: Colors.red,
-        ),
+      showCentralNotification(
+        context,
+        "Harap pilih kategori buku!",
+        isError: true,
       );
       return;
     }
@@ -127,23 +127,16 @@ class _AddBookViewState extends State<_AddBookView> {
       body: BlocListener<AddBookBloc, AddBookState>(
         listener: (context, state) {
           if (state is AddBookSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _isEditMode
-                      ? "Buku berhasil diupdate!"
-                      : "Buku berhasil disimpan!",
-                ),
-              ),
+            showCentralNotification(
+              context,
+              _isEditMode
+                  ? "Buku berhasil diupdate!"
+                  : "Buku berhasil disimpan!",
+              isError: false,
             );
             Navigator.pop(context, true);
           } else if (state is AddBookFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            showCentralNotification(context, state.message, isError: true);
           } else if (state is AddBookReady) {
             setState(() {
               _categories = state.categories;

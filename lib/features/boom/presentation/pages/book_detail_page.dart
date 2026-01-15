@@ -96,7 +96,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
             onPressed: () {
               print("Konfirmasi Hapus Ditekan!");
               Navigator.pop(ctx);
-              context.read<BookBloc>().add(DeleteBookEvent(widget.book.bookId));
+              // context.read<BookBloc>().add(DeleteBookEvent(widget.book.bookId));
               Navigator.pop(context, true);
             },
             child: const Text("Hapus", style: TextStyle(color: Colors.red)),
