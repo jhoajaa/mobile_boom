@@ -182,9 +182,9 @@ class _LoanView extends StatelessWidget {
                                         Text(
                                           "Catatan: ${loan.notes}",
                                           style: TextStyle(
-                                            color: Colors.grey[400], // Warna lebih redup
+                                            color: Colors.white,
                                             fontSize: 12,
-                                            fontStyle: FontStyle.italic, // Miring biar beda
+                                            fontStyle: FontStyle.italic,
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
