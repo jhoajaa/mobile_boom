@@ -62,7 +62,7 @@ class _MobileLoginViewState extends State<_MobileLoginView> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthFailure) {
-          showCentralNotification(context, state.message, isError: true);
+          showCentralNotification(context, "Email atau kata sandi salah!", isError: true);
         } else if (state is AuthSuccess) {
           showCentralNotification(context, "Login Berhasil!", isError: false);
 
