@@ -139,6 +139,7 @@ class _LoanView extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final loan = state.loans[index];
                     final bool isReturned = loan.isReturned == 1;
+                    final bool hasNotes = loan.notes != null && loan.notes!.isNotEmpty;
 
                     return Card(
                       elevation: 2,
@@ -176,6 +177,19 @@ class _LoanView extends StatelessWidget {
                                           fontSize: 14,
                                         ),
                                       ),
+                                    if (hasNotes) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Catatan: ${loan.notes}",
+                                          style: TextStyle(
+                                            color: Colors.grey[400], // Warna lebih redup
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic, // Miring biar beda
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
