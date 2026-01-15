@@ -108,14 +108,14 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
   ) async {
     emit(LoanLoading());
     try {
-      final response = await dio.post(
-        '${ApiConstants.loans}/update/${event.loanId}',
+      final response = await dio.put(
+        '${ApiConstants.loans}/${event.loanId}', 
         data: event.data,
       );
 
       if (response.statusCode == 200) {
         emit(LoanSuccess("Data berhasil diperbarui!"));
-        add(GetLoansEvent());
+        add(GetLoansEvent()); // Refresh list
       } else {
         emit(
           LoanError("Gagal update: ${response.data['messages'] ?? 'Unknown'}"),
