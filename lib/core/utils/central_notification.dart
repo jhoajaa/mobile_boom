@@ -1,21 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-void showCentralNotification(
+Future<void> showCentralNotification(
   BuildContext context,
   String message, {
   bool isError = false,
-}) {
-  showDialog(
+  Duration? duration,
+}) async {
+  final displayTime = duration ?? const Duration(seconds: 2);
+
+  Timer(displayTime, () {
+    if (context.mounted && Navigator.canPop(context)) {
+      Navigator.of(context).pop();
+    }
+  });
+
+  await showDialog(
     context: context,
     barrierDismissible: true,
     builder: (context) {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (context.mounted && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      });
-
       return _CentralNotificationDialog(message: message, isError: isError);
     },
   );

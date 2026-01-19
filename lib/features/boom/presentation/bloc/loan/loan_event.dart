@@ -1,3 +1,4 @@
+import 'package:boom_mobile/features/boom/data/models/borrower_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class LoanEvent extends Equatable {
@@ -34,3 +35,15 @@ class UpdateLoanEvent extends LoanEvent {
   @override
   List<Object> get props => [loanId, data];
 }
+
+class SearchBorrowerEvent extends LoanEvent {
+  final String query;
+  SearchBorrowerEvent(this.query);
+}
+
+class SelectBorrowerEvent extends LoanEvent {
+  final BorrowerModel selectedBorrower;
+  SelectBorrowerEvent(this.selectedBorrower);
+}
+
+class ClearSearchEvent extends LoanEvent {}

@@ -60,16 +60,26 @@ class _MobileLoginViewState extends State<_MobileLoginView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthFailure) {
-          showCentralNotification(context, "Email atau kata sandi salah!", isError: true);
-        } else if (state is AuthSuccess) {
-          showCentralNotification(context, "Login Berhasil!", isError: false);
-
-          Navigator.pushReplacement(
+          showCentralNotification(
             context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            "Email atau kata sandi salah!",
+            isError: true,
           );
+        } else if (state is AuthSuccess) {
+          await showCentralNotification(
+            context,
+            "Login Berhasil!",
+            isError: false,
+          );
+
+          if (context.mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePage()),
+            );
+          }
         }
       },
       builder: (context, state) {

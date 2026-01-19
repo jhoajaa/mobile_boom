@@ -34,26 +34,28 @@ class AddLoanPage extends StatelessWidget {
 }
 
 class PhoneNumberFormatter extends TextInputFormatter {
+  static String format(String input) {
+    final text = input.replaceAll(RegExp(r'\D'), '');
+
+    if (text.isEmpty) return '';
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      if (i > 0 && i % 4 == 0) {
+        buffer.write('-');
+      }
+      buffer.write(text[i]);
+    }
+    return buffer.toString();
+  }
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final text = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final formattedText = format(newValue.text);
 
-    if (text.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-
-    final buffer = StringBuffer();
-    for (int i = 0; i < text.length; i++) {
-      if (i > 0 && i % 4 == 0) {
-        buffer.write(' ');
-      }
-      buffer.write(text[i]);
-    }
-
-    final formattedText = buffer.toString();
     return newValue.copyWith(
       text: formattedText,
       selection: TextSelection.collapsed(offset: formattedText.length),
@@ -169,6 +171,95 @@ class _AddLoanViewState extends State<_AddLoanView> {
     }
   }
 
+  Widget _buildBorrowerSearchField() {
+    return BlocBuilder<LoanBloc, LoanState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            _buildInput(
+              "Nama Peminjam",
+              _nameController,
+              "Ketik nama peminjam...",
+              capitalization: TextCapitalization.words,
+              onChanged: (value) {
+                context.read<LoanBloc>().add(SearchBorrowerEvent(value));
+              },
+
+              suffixIcon: state.isSearchingBorrower
+                  ? const Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : const Icon(Icons.search, color: Colors.grey),
+            ),
+
+            if (state.searchResults.isNotEmpty)
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                margin: const EdgeInsets.only(top: 0, bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: state.searchResults.length,
+                  itemBuilder: (context, index) {
+                    final borrower = state.searchResults[index];
+                    return ListTile(
+                      dense: true,
+                      leading: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: AppColors.mainBlack,
+                        child: Text(
+                          borrower.name.isNotEmpty
+                              ? borrower.name[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            color: AppColors.lightGreen,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        borrower.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(borrower.phoneNumber),
+                      onTap: () {
+                        _nameController.text = borrower.name;
+
+                        _phoneController.text = PhoneNumberFormatter.format(borrower.phoneNumber);
+
+                        context.read<LoanBloc>().add(
+                          SelectBorrowerEvent(borrower),
+                        );
+
+                        FocusScope.of(context).unfocus();
+                      },
+                    );
+                  },
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -186,14 +277,22 @@ class _AddLoanViewState extends State<_AddLoanView> {
       backgroundColor: Colors.white,
       body: BlocListener<LoanBloc, LoanState>(
         listener: (context, state) {
-          if (state is LoanSuccess) {
-            showCentralNotification(context, state.message, isError: false);
+          if (state.successMessage != null) {
+            showCentralNotification(
+              context,
+              state.successMessage!,
+              isError: false,
+            );
 
             Future.delayed(const Duration(seconds: 2), () {
               if (mounted) Navigator.pop(context, true);
             });
-          } else if (state is LoanError) {
-            showCentralNotification(context, state.message, isError: true);
+          } else if (state.errorMessage != null && state.loans.isEmpty) {
+            showCentralNotification(
+              context,
+              state.errorMessage!,
+              isError: true,
+            );
           }
         },
         child: SingleChildScrollView(
@@ -258,11 +357,7 @@ class _AddLoanViewState extends State<_AddLoanView> {
 
               const SizedBox(height: 20),
 
-              _buildInput(
-                "Nama Peminjam",
-                _nameController,
-                "Masukkan nama peminjam",
-              ),
+              _buildBorrowerSearchField(),
 
               const SizedBox(height: 4),
 
@@ -310,7 +405,13 @@ class _AddLoanViewState extends State<_AddLoanView> {
 
               const SizedBox(height: 20),
 
-              _buildInput("Catatan", _notesController, "...", maxLines: 3),
+              _buildInput(
+                "Catatan (Opsional)",
+                _notesController,
+                capitalization: TextCapitalization.sentences,
+                "Untuk catatan tambahan",
+                maxLines: 3,
+              ),
 
               const SizedBox(height: 40),
 
@@ -320,7 +421,7 @@ class _AddLoanViewState extends State<_AddLoanView> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (state is LoanLoading)
+                      onPressed: (state.isLoadingLoans)
                           ? null
                           : () => _submit(context),
                       style: ElevatedButton.styleFrom(
@@ -329,7 +430,7 @@ class _AddLoanViewState extends State<_AddLoanView> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: (state is LoanLoading)
+                      child: (state.isLoadingLoans)
                           ? const SizedBox(
                               height: 24,
                               width: 24,
@@ -361,6 +462,9 @@ class _AddLoanViewState extends State<_AddLoanView> {
     TextEditingController ctrl,
     String hint, {
     int maxLines = 1,
+    TextCapitalization capitalization = TextCapitalization.sentences,
+    Function(String)? onChanged,
+    Widget? suffixIcon,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -372,8 +476,11 @@ class _AddLoanViewState extends State<_AddLoanView> {
           TextField(
             controller: ctrl,
             maxLines: maxLines,
+            textCapitalization: capitalization,
+            onChanged: onChanged,
             decoration: InputDecoration(
               hintText: hint,
+              suffixIcon: suffixIcon,
               border: const OutlineInputBorder(),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,

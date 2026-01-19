@@ -24,13 +24,15 @@ class AddBookScanned extends AddBookState {
   final File localImage;
   final List<CategoryModel> categories;
   final String? predictedCategoryId;
+  final String? message;
 
   const AddBookScanned(
     this.data,
     this.localImage,
     this.categories,
-    this.predictedCategoryId,
-  );
+    this.predictedCategoryId, {
+    this.message,
+  });
 
   @override
   List<Object> get props => [
@@ -38,6 +40,7 @@ class AddBookScanned extends AddBookState {
     localImage,
     categories,
     predictedCategoryId ?? '',
+    message ?? '',
   ];
 }
 
