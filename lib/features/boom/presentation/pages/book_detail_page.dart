@@ -39,14 +39,27 @@ class _BookDetailPageState extends State<BookDetailPage> {
     super.dispose();
   }
 
-  String _sanitizeUrl(String url) {
-    const String myIp = "192.168.137.1";
-    if (url.contains("localhost")) return url.replaceAll("localhost", myIp);
-    return url;
-  }
+  void _updateLocalState(String newStatus, int page) {
+    if (widget.book.status == "dipinjam" && newStatus != 'dipinjam') {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Aksi Ditolak"),
+          content: const Text(
+            "Buku ini sedang dipinjam. Anda tidak bisa mengubah status bacanya sampai buku dikembalikan.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
-  void _updateLocalState(String status, int page) {
-    if (status == 'dipinjam') {
+    if (newStatus == 'dipinjam') {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -62,7 +75,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
     if (finalPage > widget.book.totalPages) finalPage = widget.book.totalPages;
 
     setState(() {
-      _currentStatus = status;
+      _currentStatus = newStatus;
       _currentPage = finalPage;
       _pageController.text = finalPage.toString();
       _isDirty = true;
@@ -108,7 +121,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final fixedUrl = _sanitizeUrl(widget.book.coverUrl);
+    final fixedUrl = widget.book.coverUrl;
     final bool hasImage = fixedUrl.isNotEmpty && fixedUrl != '-';
 
     return Scaffold(

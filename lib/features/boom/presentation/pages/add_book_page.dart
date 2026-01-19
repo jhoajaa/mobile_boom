@@ -125,22 +125,31 @@ class _AddBookViewState extends State<_AddBookView> {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: BlocListener<AddBookBloc, AddBookState>(
-        listener: (context, state) {
+        listener: (context, state) async {
+          print("STATE MASUK: $state");
+
           if (state is AddBookSuccess) {
-            showCentralNotification(
+            print("✅ SUCCESS STATE DETECTED");
+
+            FocusScope.of(context).unfocus();
+
+            await showCentralNotification(
               context,
               _isEditMode
                   ? "Buku berhasil diupdate!"
                   : "Buku berhasil disimpan!",
               isError: false,
             );
-            Navigator.pop(context, true);
+
+            if (context.mounted) {
+              Navigator.pop(context, true);
+            }
           } else if (state is AddBookFailure) {
+            print("❌ FAILURE STATE: ${state.message}");
             showCentralNotification(context, state.message, isError: true);
           } else if (state is AddBookReady) {
             setState(() {
               _categories = state.categories;
-
               if (_isEditMode && _selectedCategoryId != null) {
                 bool exists = _categories.any(
                   (c) => c.categoryId == _selectedCategoryId,
@@ -148,6 +157,50 @@ class _AddBookViewState extends State<_AddBookView> {
                 if (!exists) _selectedCategoryId = null;
               }
             });
+          } else if (state is AddBookScanned) {
+            if (state.message != null && state.data.isEmpty) {
+              showCentralNotification(
+                context,
+                state.message!,
+                isError: true,
+                duration: const Duration(seconds: 5),
+              );
+            } else {
+              setState(() {
+                _categories = state.categories;
+
+                _titleController.text = state.data['title'] ?? '';
+
+                final authors = state.data['authors'] as List?;
+                _authorController.text = authors?.join(', ') ?? '';
+
+                _publisherController.text = state.data['publisher'] ?? '';
+                _totalPagesController.text = (state.data['pageCount'] ?? 0)
+                    .toString();
+
+                if (state.predictedCategoryId != null) {
+                  _selectedCategoryId = state.predictedCategoryId;
+                }
+
+                _localCoverFile = state.localImage;
+
+                final imageLinks = state.data['imageLinks'];
+                if (imageLinks != null && imageLinks['thumbnail'] != null) {
+                  String thumb = imageLinks['thumbnail'];
+
+                  if (thumb.startsWith('http://')) {
+                    thumb = thumb.replaceFirst('http://', 'https://');
+                  }
+                  _webCoverUrl = thumb;
+                }
+              });
+
+              showCentralNotification(
+                context,
+                "Scan Berhasil! Data terisi otomatis.",
+                isError: false,
+              );
+            }
           }
         },
         child: SingleChildScrollView(
@@ -244,11 +297,19 @@ class _AddBookViewState extends State<_AddBookView> {
               const SizedBox(height: 30),
 
               _buildLabel("Judul Buku"),
-              CustomTextField(hint: "Judul", controller: _titleController),
+              CustomTextField(
+                hint: "Judul",
+                controller: _titleController,
+                capitalization: TextCapitalization.words,
+              ),
               const SizedBox(height: 16),
 
               _buildLabel("Penulis"),
-              CustomTextField(hint: "Penulis", controller: _authorController),
+              CustomTextField(
+                hint: "Penulis",
+                controller: _authorController,
+                capitalization: TextCapitalization.words,
+              ),
               const SizedBox(height: 16),
 
               _buildLabel("Kategori Buku"),
@@ -346,18 +407,21 @@ class CustomTextField extends StatelessWidget {
   final String hint;
   final TextEditingController controller;
   final bool isNumber;
+  final TextCapitalization capitalization;
 
   const CustomTextField({
     super.key,
     required this.hint,
     required this.controller,
     this.isNumber = false,
+    this.capitalization = TextCapitalization.sentences,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      textCapitalization: capitalization,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         hintText: hint,
